@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pennant Chase</title>
+<link rel="stylesheet" href="styles/game.css">
+</head>
+<body>
+<noscript><div class="onboarding" style="padding:2rem;text-align:center;color:var(--text)">Turn on JavaScript to run Pennant Chase.</div></noscript>
+<div id="onboarding" class="onboarding" data-pennant-needs-init="1"><div class="onboarding-inner splash-hero onboarding-splash"><div class="splash-inner"><div class="pennant-logo" style="margin-bottom:1.25rem"></div><p class="splash-kicker">Franchise sim</p><h1 class="splash-title">Pennant Chase</h1><p class="splash-lead">Run the front office and the dugout. Develop prospects, trade smart, and chase October — with a real rotation, relievers who eat innings, and a seeded postseason bracket.</p><div class="splash-actions"><button type="button" class="btn lg" id="ob-s1">Start your career</button></div><div class="splash-features"><span class="splash-chip">162-game grind</span><span class="splash-chip">Calendar schedule</span><span class="splash-chip">Postseason bracket</span><span class="splash-chip">Prospects & trades</span></div></div></div></div>
+<div id="app" class="hidden">
+<aside class="sidebar">
+<div class="brand"><div class="brand-mark" aria-hidden="true"></div><div class="brand-text">Pennant Chase</div></div>
+<div id="team-banner" class="team-banner"></div>
+<div class="sidebar-search"><input type="search" id="player-search" placeholder="Search players…" autocomplete="off"/></div>
+<div id="nav"></div>
+</aside>
+<main class="main" id="main"></main>
+</div>
+<div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
+<div class="modal-bg" id="modal-bg"><div class="modal" id="modal" role="dialog" aria-modal="false"></div></div>
+<script src="js/game.js"></script>
+</body>
+</html>
