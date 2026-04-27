@@ -27,6 +27,7 @@ body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;bac
 .btn.secondary:hover{background:var(--border)}
 .btn.danger{background:var(--danger)}
 .btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:focus-visible,.nav-item:focus-visible,input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 table{width:100%;border-collapse:collapse;font-size:.8125rem}
 th,td{padding:.5rem .65rem;text-align:left;border-bottom:1px solid var(--border)}
 th{color:var(--muted);font-weight:600;cursor:pointer;user-select:none}
@@ -256,16 +257,15 @@ tr.dragging{opacity:.55}
 .trade-center{text-align:center;padding:.5rem}
 .trade-tug{height:12px;border-radius:99px;background:linear-gradient(90deg,rgba(248,113,113,.35),rgba(234,179,8,.25),rgba(52,211,153,.35));position:relative;margin:.65rem 0;overflow:visible}
 .trade-tug>i{position:absolute;left:50%;top:-2px;bottom:-2px;width:4px;margin-left:-2px;background:var(--text);border-radius:2px;box-shadow:0 0 8px rgba(255,255,255,.4);z-index:2}
-.news-day-group{margin-bottom:.5rem;border:1px solid var(--border);border-radius:10px;padding:.35rem .65rem .65rem;background:rgba(15,22,34,.35)}
-.news-day-group summary{cursor:pointer;list-style:none}
-.news-day-group summary::-webkit-details-marker{display:none}
 .news-page{padding:0}
 .news-filters{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
 .news-filter-btn{font-size:.72rem;padding:.35rem .65rem;border-radius:999px;border:1px solid var(--border);background:rgba(15,22,34,.6);color:var(--muted);cursor:pointer;font-family:inherit}
 .news-filter-btn:hover,.news-filter-btn.on{color:var(--text);border-color:var(--gold);background:rgba(212,168,83,.1)}
 .news-timeline{position:relative;padding-left:1.25rem}
 .news-timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:linear-gradient(180deg,var(--gold-dim),transparent)}
-.news-day-group{margin-bottom:1.25rem}
+.news-day-group{margin-bottom:1.25rem;border:1px solid var(--border);border-radius:10px;padding:.35rem .65rem .65rem;background:rgba(15,22,34,.35)}
+.news-day-group summary{cursor:pointer;list-style:none}
+.news-day-group summary::-webkit-details-marker{display:none}
 .news-day-head{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;cursor:pointer;user-select:none;font-weight:700;font-size:.85rem;color:var(--gold)}
 .news-day-head .chev{font-size:.65rem;opacity:.7}
 .news-item-v2{padding:.55rem .65rem;margin-bottom:.45rem;border-radius:10px;border:1px solid var(--border);background:rgba(15,22,34,.45);font-size:.84rem;line-height:1.45}
@@ -299,6 +299,7 @@ tr.dragging{opacity:.55}
 <script>
 (function(){
 'use strict';
+const __PC_DEBUG=typeof location!=='undefined'&&/[?&]debug=1(?:&|$)/.test(String(location.search||''));
 const SAVE_KEY='pennantChase_v2';
 const LEGACY_SAVE_KEY='baseballManagerSave_v1';
 const LEVELS=['MLB','AAA','AA','A'];
@@ -359,8 +360,12 @@ let newsSearchQuery='';
 let newsShowCount=20;
 
 function rng(){return game&&game.rng?game.rng():Math.random()}
-function randInt(a,b){return a+Math.floor(rng()*(b-a+1))}
-function pick(arr){return arr[Math.floor(rng()*arr.length)]}
+function randInt(a,b){
+if(!Number.isFinite(a)||!Number.isFinite(b))return 0;
+const lo=Math.floor(Math.min(a,b)),hi=Math.floor(Math.max(a,b));
+return lo+Math.floor(rng()*(hi-lo+1))
+}
+function pick(arr){if(!arr||!arr.length)throw new Error('pick: empty array');return arr[Math.floor(rng()*arr.length)]}
 function randomBats(){const r=rng();return r<0.3?'L':r<0.4?'S':'R'}
 function randomThrows(){return rng()<0.3?'L':'R'}
 function handBadge(p){
@@ -970,7 +975,7 @@ pit.forEach(p=>{
 const e=parseFloat(era(p));
 if(!isNaN(e)&&e<bestEra){bestEra=e;bestName=p.first+' '+p.last}
 });
-console.log('[PennantChase sanity] League AVG (200+ AB): '+avg.toFixed(3)+' · HR leader: '+maxHr+' ('+hrName+') · Best ERA (40+ IP): '+(bestEra===999?'—':bestEra.toFixed(2))+' ('+bestName+')')
+if(__PC_DEBUG)console.log('[PennantChase sanity] League AVG (200+ AB): '+avg.toFixed(3)+' · HR leader: '+maxHr+' ('+hrName+') · Best ERA (40+ IP): '+(bestEra===999?'—':bestEra.toFixed(2))+' ('+bestName+')')
 }
 
 function applyGameResult(g,homeId,awayId,res){
@@ -1352,7 +1357,7 @@ let html='';
 NAV_GROUPS.forEach(gr=>{
 html+='<div class="nav-section"><div class="nav-section-label">'+esc(gr.label)+'</div>';
 gr.items.forEach(n=>{
-html+='<button type="button" class="nav-item'+(uiSection===n.id?' active':'')+'" data-nav="'+n.id+'"><span class="ico">'+n.ico+'</span><span class="lbl">'+esc(n.label)+'</span></button>';
+html+='<button type="button" class="nav-item'+(uiSection===n.id?' active':'')+'" data-nav="'+n.id+'"'+(uiSection===n.id?' aria-current="page"':'')+'><span class="ico" aria-hidden="true">'+n.ico+'</span><span class="lbl">'+esc(n.label)+'</span></button>';
 });
 html+='</div>';
 });
@@ -1370,8 +1375,9 @@ renderTeamBanner()
 }
 
 function renderMain(){
-const g=game;if(!g){document.getElementById('main').innerHTML='<div class="panel empty">No career loaded yet. Finish onboarding or open Settings to load a save.</div>';return}
-const m=document.getElementById('main');
+const g=game,m=document.getElementById('main');
+if(!m)return;
+if(!g){m.innerHTML='<div class="panel empty">No career loaded yet. Finish onboarding or open Settings to load a save.</div>';return}
 const ut=userTeam(g);
 if(!ut){m.innerHTML='<div class="panel empty">Save file is missing team data or is incompatible. Use <strong>Settings → New career</strong> or fix your browser storage.</div>';return}
 const handlers={
@@ -2393,8 +2399,8 @@ im.value=''
 })
 }
 
-function showModal(html){document.getElementById('modal').innerHTML=html;document.getElementById('modal-bg').classList.add('show')}
-function hideModal(){document.getElementById('modal-bg').classList.remove('show')}
+function showModal(html){const box=document.getElementById('modal'),bg=document.getElementById('modal-bg');if(box)box.innerHTML=html;if(bg)bg.classList.add('show')}
+function hideModal(){const bg=document.getElementById('modal-bg');if(bg)bg.classList.remove('show')}
 
 function wireSection(){
 if(uiSection==='home')bindHome();
