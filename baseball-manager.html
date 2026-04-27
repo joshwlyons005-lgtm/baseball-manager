@@ -295,7 +295,7 @@ tr.dragging{opacity:.55}
 <main class="main" id="main"></main>
 </div>
 <div class="toast-wrap" id="toast-wrap" aria-live="polite"></div>
-<div class="modal-bg" id="modal-bg"><div class="modal" id="modal"></div></div>
+<div class="modal-bg" id="modal-bg"><div class="modal" id="modal" role="dialog" aria-modal="false"></div></div>
 <script>
 (function(){
 'use strict';
@@ -1362,7 +1362,7 @@ html+='<button type="button" class="nav-item'+(uiSection===n.id?' active':'')+'"
 html+='</div>';
 });
 el.innerHTML=html;
-el.querySelectorAll('[data-nav]').forEach(x=>x.addEventListener('click',()=>{
+el.querySelectorAll('[data-nav]').forEach(x=>{x.onclick=()=>{
 const prev=uiSection;
 uiSection=x.dataset.nav;
 if(uiSection==='schedule'&&prev!=='schedule'&&scheduleView==='cal'&&game){
@@ -1370,7 +1370,7 @@ const per=28;
 scheduleCalPage=Math.floor(Math.min(161,Math.max(0,game.seasonDay))/per)
 }
 renderNav();renderMain()
-}));
+}});
 renderTeamBanner()
 }
 
@@ -1457,14 +1457,16 @@ if(!game)return;
 if(game.playoffsComplete){toast('Postseason is over.','info');return}
 if(game.seasonComplete&&game.inPlayoffs){
 showModal('<h3>Sim seven postseason days?</h3><p class="sub">Each day plays every unfinished series once (same as <strong>Sim day</strong> in October).</p><p><button class="btn" id="c-yes">Run up to 7</button> <button class="btn secondary" id="c-no">Cancel</button></p>');
-document.getElementById('c-yes').onclick=()=>{hideModal();for(let i=0;i<7;i++){if(game.playoffsComplete)break;simDay(game)}renderMain()};
-document.getElementById('c-no').onclick=hideModal;
+var _cy=document.getElementById('c-yes'),_cn=document.getElementById('c-no');
+if(_cy)_cy.onclick=()=>{hideModal();for(let i=0;i<7;i++){if(!game||game.playoffsComplete)break;simDay(game)}renderMain()};
+if(_cn)_cn.onclick=hideModal;
 return
 }
 if(game.seasonComplete){toast('Regular season is over — use postseason sim.','info');return}
 showModal('<h3>Sim one week?</h3><p class="sub">Seven days will simulate in order.</p><p><button class="btn" id="c-yes">Sim 7 days</button> <button class="btn secondary" id="c-no">Cancel</button></p>');
-document.getElementById('c-yes').onclick=()=>{hideModal();for(let i=0;i<7;i++)simDay(game);renderMain()};
-document.getElementById('c-no').onclick=hideModal
+var _cy2=document.getElementById('c-yes'),_cn2=document.getElementById('c-no');
+if(_cy2)_cy2.onclick=()=>{hideModal();for(let i=0;i<7;i++){if(!game)break;simDay(game)}renderMain()};
+if(_cn2)_cn2.onclick=hideModal
 }
 
 function bindHome(){
@@ -1473,46 +1475,47 @@ var _el;
 if(!game||!game.playoffsComplete){toast('Finish the World Series first.','info');return}
 if(advanceToNextSeason(game)){saveGame(game);toast('Opening Day '+game.seasonYear+' — good luck.','success');renderMain()}
 });
-(_el=document.getElementById('sim1'))&&_el.addEventListener('click',()=>{if(!game)return;if(game.playoffsComplete){toast('The postseason is finished for this year.','info');return}simDay(game);renderMain()});
-(_el=document.getElementById('sim7'))&&_el.addEventListener('click',simWeekConfirm);
-(_el=document.getElementById('sim90'))&&_el.addEventListener('click',()=>{if(!game)return;simToDate(game,90);renderMain()});
-(_el=document.getElementById('simend'))&&_el.addEventListener('click',()=>{
+(_el=document.getElementById('sim1'))&&(_el.onclick=()=>{if(!game)return;if(game.playoffsComplete){toast('The postseason is finished for this year.','info');return}simDay(game);renderMain()});
+(_el=document.getElementById('sim7'))&&(_el.onclick=simWeekConfirm);
+(_el=document.getElementById('sim90'))&&(_el.onclick=()=>{if(!game)return;simToDate(game,90);renderMain()});
+(_el=document.getElementById('simend'))&&(_el.onclick=()=>{
 if(!game||game.seasonComplete)return;
 showModal('<h3>Sim to end of regular season?</h3><p class="sub">This may take a moment.</p><p><button class="btn" id="se-yes">Run</button> <button class="btn secondary" id="se-no">Cancel</button></p>');
-document.getElementById('se-yes').onclick=()=>{hideModal();while(!game.seasonComplete&&game.seasonDay<190){simDay(game)}logLeagueStatSanity(game);renderMain()};
-document.getElementById('se-no').onclick=hideModal
+var _sy=document.getElementById('se-yes'),_sn=document.getElementById('se-no');
+if(_sy)_sy.onclick=()=>{hideModal();while(game&&!game.seasonComplete&&game.seasonDay<190){simDay(game)}logLeagueStatSanity(game);renderMain()};
+if(_sn)_sn.onclick=hideModal
 });
-document.querySelectorAll('[data-lu-up]').forEach(b=>{b.addEventListener('click',()=>{
+document.querySelectorAll('[data-lu-up]').forEach(b=>{b.onclick=()=>{
 const i=+b.dataset.luUp,ut=userTeam(game);
 if(!ut||!ut.lineup||i<=0)return;
 const x=ut.lineup[i-1];ut.lineup[i-1]=ut.lineup[i];ut.lineup[i]=x;
 saveGame(game);renderMain()
-})});
-document.querySelectorAll('[data-lu-dn]').forEach(b=>{b.addEventListener('click',()=>{
+}});
+document.querySelectorAll('[data-lu-dn]').forEach(b=>{b.onclick=()=>{
 const i=+b.dataset.luDn,ut=userTeam(game);
 if(!ut||!ut.lineup||i>=ut.lineup.length-1)return;
 const x=ut.lineup[i+1];ut.lineup[i+1]=ut.lineup[i];ut.lineup[i]=x;
 saveGame(game);renderMain()
-})});
-document.querySelectorAll('[data-rot-up]').forEach(b=>{b.addEventListener('click',()=>{
+}});
+document.querySelectorAll('[data-rot-up]').forEach(b=>{b.onclick=()=>{
 const i=+b.dataset.rotUp,ut=userTeam(game);
 if(!ut||!ut.rotation||i<=0)return;
 const x=ut.rotation[i-1];ut.rotation[i-1]=ut.rotation[i];ut.rotation[i]=x;
 saveGame(game);renderMain()
-})});
-document.querySelectorAll('[data-rot-dn]').forEach(b=>{b.addEventListener('click',()=>{
+}});
+document.querySelectorAll('[data-rot-dn]').forEach(b=>{b.onclick=()=>{
 const i=+b.dataset.rotDn,ut=userTeam(game);
 if(!ut||!ut.rotation||i>=ut.rotation.length-1)return;
 const x=ut.rotation[i+1];ut.rotation[i+1]=ut.rotation[i];ut.rotation[i]=x;
 saveGame(game);renderMain()
-})});
+}});
 var ctp=document.getElementById('closer-pick');
-if(ctp)ctp.addEventListener('change',()=>{
+if(ctp)ctp.onchange=()=>{
 const ut=userTeam(game);if(!ut)return;
 ut.closerId=ctp.value||null;
 ensureTeamStaffing(game,ut);saveGame(game);renderMain()
-});
-document.querySelectorAll('[data-promo]').forEach(b=>{b.addEventListener('click',()=>{
+};
+document.querySelectorAll('[data-promo]').forEach(b=>{b.onclick=()=>{
 const pid=b.dataset.promo,ut=userTeam(game),room=document.getElementById('promo-room-out'),dest=document.getElementById('promo-room-dest');
 if(!ut||!game)return;
 if(ut.mlb26.length>=26){
@@ -1521,7 +1524,7 @@ if(!rep){toast('26-man is full — pick who gets optioned in the bar above.','er
 if(!movePlayer(game,pid,'MLB',{replacePid:rep,replaceDest:rd}))return
 }else{if(!movePlayer(game,pid,'MLB',{}))return}
 renderMain()
-})});
+}});
 var luFrom=null,rotFrom=null;
 document.querySelectorAll('tr.lu-row').forEach(row=>{
 row.addEventListener('dragstart',e=>{luFrom=+row.dataset.i;row.classList.add('dragging');e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain','lu')}catch(err){}});
@@ -1613,7 +1616,7 @@ return tabs+farm
 }
 const hitRows=hit.map(p=>'<tr class="click-row" data-exp="'+p.id+'"><td>'+esc(p.first+' '+p.last)+' '+handBadge(p)+'</td><td>'+p.pos+'</td><td>'+p.age+'</td><td>'+avg(p)+'</td><td>'+obpStat(p)+'</td><td>'+(p.h||0)+'</td><td>'+warStat(p)+'</td><td>'+p.hr+'</td><td>'+p.rbi+'</td><td>'+drsStat(p)+'</td><td><select class="sd-fast" data-sd="'+p.id+'"><option value="">Option…</option><option value="AAA">AAA</option><option value="AA">AA</option><option value="A">A</option></select></td></tr>'+
 (rosterExpandedId===p.id?'<tr><td colspan="11">'+renderPlayerDetailCard(g,p)+'</td></tr>':'')).join('');
-const pitRows=pit.map(p=>'<tr class="click-row" data-exp="'+p.id+'"><td>'+esc(p.first+' '+p.last)+' '+handBadge(p)+'</td><td>'+p.pos+'</td><td>'+p.ip.toFixed(1)+'</td><td>'+era(p)+'</td><td>'+whip(p)+'</td><td>'+k9Stat(p)+'</td><td>'+warStat(p)+'</td><td>'+p.k+'</td><td>'+p.w+'-'+p.l+'</td><td><select class="sd-fast" data-sd="'+p.id+'"><option value="">Option…</option><option value="AAA">AAA</option><option value="AA">AA</option><option value="A">A</option></select></td></tr>'+
+const pitRows=pit.map(p=>'<tr class="click-row" data-exp="'+p.id+'"><td>'+esc(p.first+' '+p.last)+' '+handBadge(p)+'</td><td>'+p.pos+'</td><td>'+((+p.ip||0)).toFixed(1)+'</td><td>'+era(p)+'</td><td>'+whip(p)+'</td><td>'+k9Stat(p)+'</td><td>'+warStat(p)+'</td><td>'+p.k+'</td><td>'+p.w+'-'+p.l+'</td><td><select class="sd-fast" data-sd="'+p.id+'"><option value="">Option…</option><option value="AAA">AAA</option><option value="AA">AA</option><option value="A">A</option></select></td></tr>'+
 (rosterExpandedId===p.id?'<tr><td colspan="10">'+renderPlayerDetailCard(g,p)+'</td></tr>':'')).join('');
 return tabs+'<div class="panel"><h2>Position players</h2><div style="overflow-x:auto"><table><thead><tr><th>Player</th><th>Pos</th><th>Age</th><th>AVG</th><th>OBP</th><th>H</th><th>WAR</th><th>HR</th><th>RBI</th><th>DRS</th><th></th></tr></thead><tbody>'+hitRows+'</tbody></table></div></div>'+
 '<div class="panel"><h2>Pitchers</h2><div style="overflow-x:auto"><table><thead><tr><th>Player</th><th>Pos</th><th>IP</th><th>ERA</th><th>WHIP</th><th>K/9</th><th>WAR</th><th>K</th><th>W-L</th><th></th></tr></thead><tbody>'+pitRows+'</tbody></table></div></div>'
@@ -1633,13 +1636,13 @@ const id=r.dataset.exp;rosterExpandedId=rosterExpandedId===id?null:id;renderMain
 document.querySelectorAll('[data-expf]').forEach(b=>{b.onclick=e=>{
 e.stopPropagation();const id=b.dataset.expf;rosterExpandedId=rosterExpandedId===id?null:id;renderMain()
 }});
-document.querySelectorAll('select.sd-fast').forEach(sel=>{sel.addEventListener('change',()=>{
+document.querySelectorAll('select.sd-fast').forEach(sel=>{sel.onchange=()=>{
 const dest=sel.value;if(!dest)return;
 const pid=sel.dataset.sd;
 movePlayer(game,pid,dest,{});
 sel.selectedIndex=0;
 renderMain()
-})});
+}});
 document.querySelectorAll('select.farm-move').forEach(sel=>{sel.onchange=()=>{
 const pid=sel.dataset.pid,dest=sel.value;
 if(!dest){return}
@@ -1806,8 +1809,8 @@ pit.slice(0,20).map(p=>'<tr><td>'+era(p)+'</td><td>'+whip(p)+'</td><td>'+k9Stat(
 }
 
 function bindLeaders(){
-document.querySelectorAll('[data-lk]').forEach(el=>el.addEventListener('click',()=>{sortState.leaders.key=el.dataset.lk;sortState.leaders.dir=-1;renderMain()}));
-document.querySelectorAll('[data-lpk]').forEach(el=>el.addEventListener('click',()=>{const k=el.dataset.lpk;sortState.leaders.key=k;sortState.leaders.dir=(k==='era'||k==='whip')?1:-1;renderMain()}));
+document.querySelectorAll('[data-lk]').forEach(el=>{el.onclick=()=>{sortState.leaders.key=el.dataset.lk;sortState.leaders.dir=-1;renderMain()}});
+document.querySelectorAll('[data-lpk]').forEach(el=>{el.onclick=()=>{const k=el.dataset.lpk;sortState.leaders.key=k;sortState.leaders.dir=(k==='era'||k==='whip')?1:-1;renderMain()}});
 }
 
 function filterOrgProspects(g,ut){
@@ -1904,7 +1907,7 @@ return'<div class="panel"><h2>Finances</h2><p class="sub">Season-to-date revenue
 }
 function bindFinances(){
 const s=document.getElementById('budgetslider');if(!s)return;
-s.addEventListener('input',()=>{const ut=userTeam(game);if(!ut)return;document.getElementById('budgetv').textContent=s.value;ut.budget=+s.value;saveGame(game)});
+s.oninput=()=>{const ut=userTeam(game);if(!ut)return;var bv=document.getElementById('budgetv');if(bv)bv.textContent=s.value;ut.budget=+s.value;saveGame(game)};
 }
 
 function renderFA(g){
@@ -1913,7 +1916,7 @@ return'<div class="panel"><h2>Free agency</h2><table><thead><tr><th>Player</th><
 fa.map(p=>'<tr><td>'+esc(p.first+' '+p.last)+'</td><td>'+p.age+'</td><td>'+p.pos+'</td><td>'+playerValue(p).toFixed(1)+'</td><td>'+fmtMoney(p.salary)+'</td><td><input type="number" class="faaav" data-fa="'+p.id+'" placeholder="AAV"/> <button class="btn secondary fa-sign" data-fa="'+p.id+'">Offer</button></td></tr>').join('')+'</tbody></table></div>'
 }
 function bindFA(){
-document.querySelectorAll('.fa-sign').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('.fa-sign').forEach(b=>{b.onclick=()=>{
 const pid=b.dataset.fa,inp=document.querySelector('.faaav[data-fa="'+pid+'"]'),p=playerById(game,pid),ut=userTeam(game);
 if(!p||!inp||!ut)return;
 const offer=+inp.value*1e6||0;
@@ -1923,7 +1926,7 @@ p.teamId=ut.id;p.level='MLB';p.contractYears=2;p.salary=offer||p.salary;
 ut.mlb26.push(p.id);game.freeAgents=game.freeAgents.filter(x=>x.id!==p.id);
 ensureTeamStaffing(game,ut);
 addNews(game,'Signed FA '+p.first+' '+p.last+' '+fmtMoney(p.salary),'signing');logTransaction(game,'Signed FA '+p.first+' '+p.last,'fa');saveGame(game);renderMain();toast('Signed '+p.first+' '+p.last+'.','success');
-}));
+}});
 }
 
 function renderIntl(g){
@@ -1936,7 +1939,7 @@ return'<tr><td><strong>'+esc(p.first+' '+p.last)+'</strong> '+handBadge(p)+'</td
 }).join('')+'</tbody></table></div></div>'
 }
 function bindIntl(){
-document.querySelectorAll('.intl-sign').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('.intl-sign').forEach(b=>{b.onclick=()=>{
 const p=playerById(game,b.dataset.id),ut=userTeam(game);
 if(!p||!ut)return;
 if(ut.intlPool*1e6<p.intlAsk){toast('Not enough international bonus pool.','error');return}
@@ -1944,7 +1947,7 @@ ut.intlPool-=p.intlAsk/1e6;
 p.teamId=ut.id;p.level='A';p.age=17;
 ut.minors.A.push(p.id);game.intlProspects=game.intlProspects.filter(x=>x.id!==p.id);
 addNews(game,'Intl sign '+p.first+' '+p.last,'signing');logTransaction(game,'International sign '+p.first+' '+p.last,'intl');saveGame(game);renderMain();toast('Signed '+p.first+' '+p.last+' from intl pool.','success');
-}));
+}});
 }
 
 function renderDraft(g){
@@ -1967,23 +1970,23 @@ return'<div class="panel"><div class="draft-scout-hdr"><h2 style="margin:0">Amat
 (rows||'<tr><td colspan="8" class="empty">Draft pool empty.</td></tr>')+'</tbody></table></div><button class="btn secondary" id="autodraft">Auto-pick best (by scout grade)</button></div>'
 }
 function bindDraft(){
-document.querySelectorAll('.draft-pick').forEach(b=>b.addEventListener('click',()=>draftSelect(b.dataset.id)));
-document.querySelectorAll('.draft-scout-btn').forEach(b=>b.addEventListener('click',()=>{
+document.querySelectorAll('.draft-pick').forEach(b=>{b.onclick=()=>draftSelect(b.dataset.id)});
+document.querySelectorAll('.draft-scout-btn').forEach(b=>{b.onclick=()=>{
 const id=b.dataset.scout,g=game;if(!g)return;
 if((g.scoutsAvailable||0)<=0){toast('No scouts left.','error');return}
 if(isDraftScouted(g,id))return;
 if(!g.draftScoutedIds)g.draftScoutedIds=[];
 g.draftScoutedIds.push(id);g.scoutsAvailable=(g.scoutsAvailable||0)-1;
 saveGame(game);renderMain();toast('Scouting report added.','success')
-}));
-var ad=document.getElementById('autodraft');if(ad)ad.addEventListener('click',()=>{
+}});
+var ad=document.getElementById('autodraft');if(ad)ad.onclick=()=>{
 const g=game,order=g.draftOrder||[];
 const curPick=order[g.draftPick%30];
 const slotTeam=(curPick===null||curPick===undefined)?0:curPick;
 if(slotTeam!==g.userTeamId){toast('Not your pick.','error');return}
 const pool=g.draftProspects.filter(p=>p.level==='DRAFT');if(!pool.length)return;
 const best=pool.slice().sort((a,b)=>b.scout-a.scout)[0];draftSelect(best.id)
-});
+};
 }
 function draftSelect(pid){
 const order=game.draftOrder||[];
@@ -2190,9 +2193,9 @@ html+='</div>';
 return html
 }
 function bindNews(){
-document.querySelectorAll('[data-nf]').forEach(b=>{b.addEventListener('click',()=>{newsFilterCat=b.dataset.nf;newsShowCount=20;renderMain()})});
-var lm=document.getElementById('news-load-more');if(lm)lm.addEventListener('click',()=>{newsShowCount+=20;renderMain()});
-var ns=document.getElementById('news-search');if(ns)ns.addEventListener('input',()=>{newsSearchQuery=ns.value||'';newsShowCount=20;renderMain()})
+document.querySelectorAll('[data-nf]').forEach(b=>{b.onclick=()=>{newsFilterCat=b.dataset.nf;newsShowCount=20;renderMain()}});
+var lm=document.getElementById('news-load-more');if(lm)lm.onclick=()=>{newsShowCount+=20;renderMain()};
+var ns=document.getElementById('news-search');if(ns)ns.oninput=()=>{newsSearchQuery=ns.value||'';newsShowCount=20;renderMain()}
 }
 
 function brAbbr(g,id){const t=getTeam(g,id);return t?t.abbr:'—'}
@@ -2331,7 +2334,7 @@ renderBracketShelf(g,p)+
 '<h3 style="font-size:.95rem;margin-top:1.25rem;color:var(--gold)">Results log</h3><ul style="font-size:.84rem;line-height:1.65;margin:0;padding-left:1.1rem">'+(results||'<li class="sub">No series finished yet.</li>')+'</ul></div>'
 }
 function bindPostseason(){
-var sp=document.getElementById('simp-play');if(sp)sp.addEventListener('click',()=>{if(!game||game.playoffsComplete){toast('Postseason is over.','info');return}simPlayoffDay(game);saveGame(game);renderMain()});
+var sp=document.getElementById('simp-play');if(sp)sp.onclick=()=>{if(!game||game.playoffsComplete){toast('Postseason is over.','info');return}simPlayoffDay(game);saveGame(game);renderMain()};
 bindNextSeasonBtn()
 }
 function bindNextSeasonBtn(){
@@ -2358,20 +2361,21 @@ return'<div class="panel"><h2>Settings</h2><div class="settings-section"><h3>Car
 '<p class="sub" style="margin-top:1rem">Pennant Chase · save format v'+esc(String(g.version||2))+' · stored in this browser unless you export.</p></div>'
 }
 function bindSettings(){
-var ng=document.getElementById('newgame');if(ng)ng.addEventListener('click',()=>{
+var ng=document.getElementById('newgame');if(ng)ng.onclick=()=>{
 showModal('<h3>Start a new career?</h3><p class="sub">Your current save in this browser will be deleted.</p><p><button class="btn" id="ng-y">Start fresh</button> <button class="btn secondary" id="ng-n">Cancel</button></p>');
-document.getElementById('ng-y').onclick=()=>{hideModal();try{localStorage.removeItem(SAVE_KEY)}catch(e){}game=null;document.getElementById('app').classList.add('hidden');document.getElementById('onboarding').classList.remove('hidden');onboardingStep=1;onboardingTeamIdx=0;onboardingDiff=1;renderOnboarding()};
-document.getElementById('ng-n').onclick=hideModal;
-});
-var sv=document.getElementById('save');if(sv)sv.addEventListener('click',()=>{saveGame(game);toast('Career saved.','success')});
-var sn=document.getElementById('savename');if(sn)sn.addEventListener('change',e=>{if(game&&game.settings){game.settings.saveName=e.target.value;saveGame(game);toast('Career name updated.','info')}});
-var ld=document.getElementById('load');if(ld)ld.addEventListener('click',()=>{
+var _ny=document.getElementById('ng-y'),_nn=document.getElementById('ng-n');
+if(_ny)_ny.onclick=()=>{hideModal();try{localStorage.removeItem(SAVE_KEY)}catch(e){}game=null;var _a=document.getElementById('app'),_o=document.getElementById('onboarding');if(_a)_a.classList.add('hidden');if(_o)_o.classList.remove('hidden');onboardingStep=1;onboardingTeamIdx=0;onboardingDiff=1;renderOnboarding()};
+if(_nn)_nn.onclick=hideModal;
+};
+var sv=document.getElementById('save');if(sv)sv.onclick=()=>{saveGame(game);toast('Career saved.','success')};
+var sn=document.getElementById('savename');if(sn)sn.onchange=e=>{if(game&&game.settings){game.settings.saveName=e.target.value;saveGame(game);toast('Career name updated.','info')}};
+var ld=document.getElementById('load');if(ld)ld.onclick=()=>{
 const x=loadGame();if(x){game=x;game.rng=makeRng(game.seed||Date.now()%1e6);showAppShell();renderNav();renderMain();toast('Loaded save.','success')}else toast('No save file found.','error')
-});
-var df=document.getElementById('diff');if(df)df.addEventListener('change',e=>{if(game)game.difficulty=+e.target.value;saveGame(game)});
-var as=document.getElementById('autosave-toggle');if(as)as.addEventListener('change',()=>{if(game&&game.settings){game.settings.autoSave=!!as.checked;saveGame(game);toast('Auto-save '+(as.checked?'on':'off')+'.','info')}});
-var ss=document.getElementById('simspeed');if(ss)ss.addEventListener('change',()=>{if(game&&game.settings){game.settings.simSpeed=+ss.value;saveGame(game);toast('Pacing preference saved.','info')}});
-var ex=document.getElementById('export-save');if(ex)ex.addEventListener('click',()=>{
+};
+var df=document.getElementById('diff');if(df)df.onchange=e=>{if(game)game.difficulty=+e.target.value;saveGame(game)};
+var as=document.getElementById('autosave-toggle');if(as)as.onchange=()=>{if(game&&game.settings){game.settings.autoSave=!!as.checked;saveGame(game);toast('Auto-save '+(as.checked?'on':'off')+'.','info')}};
+var ss=document.getElementById('simspeed');if(ss)ss.onchange=()=>{if(game&&game.settings){game.settings.simSpeed=+ss.value;saveGame(game);toast('Pacing preference saved.','info')}};
+var ex=document.getElementById('export-save');if(ex)ex.onclick=()=>{
 if(!game)return;
 try{
 const blob=new Blob([JSON.stringify(game)],{type:'application/json'});
@@ -2383,8 +2387,8 @@ a.click();
 URL.revokeObjectURL(url);
 toast('Download started.','success')
 }catch(err){toast('Export failed.','error')}
-});
-var im=document.getElementById('import-save');if(im)im.addEventListener('change',e=>{
+};
+var im=document.getElementById('import-save');if(im)im.onchange=e=>{
 const f=e.target.files&&e.target.files[0];if(!f)return;
 const r=new FileReader();
 r.onload=()=>{try{
@@ -2396,11 +2400,12 @@ game=o;game.rng=makeRng(game.seed||Date.now()%1e6);saveGame(game);showAppShell()
 };
 r.readAsText(f);
 im.value=''
-})
+};
 }
 
-function showModal(html){const box=document.getElementById('modal'),bg=document.getElementById('modal-bg');if(box)box.innerHTML=html;if(bg)bg.classList.add('show')}
-function hideModal(){const bg=document.getElementById('modal-bg');if(bg)bg.classList.remove('show')}
+function showModal(html){const box=document.getElementById('modal'),bg=document.getElementById('modal-bg');if(box){box.innerHTML=html;box.setAttribute('aria-modal','true');var hd=box.querySelector('h1,h2,h3');if(hd){if(!hd.id)hd.id='pc-modal-title';box.setAttribute('aria-labelledby',hd.id)}else{box.setAttribute('aria-label','Pennant Chase')}}
+if(bg)bg.classList.add('show')}
+function hideModal(){const bg=document.getElementById('modal-bg'),box=document.getElementById('modal');if(bg)bg.classList.remove('show');if(box){box.setAttribute('aria-modal','false');box.removeAttribute('aria-labelledby');box.removeAttribute('aria-label')}}
 
 function wireSection(){
 if(uiSection==='home')bindHome();
@@ -2535,6 +2540,11 @@ renderOnboarding();
 bindGlobalKeys();bindPlayerSearch();
 const bg=document.getElementById('modal-bg');
 if(bg&&!bg.dataset.pennantPatched){bg.dataset.pennantPatched='1';bg.addEventListener('click',e=>{if(e.target===bg)hideModal()})}
+if(!window.__pcModalKeys){window.__pcModalKeys=true;document.addEventListener('keydown',e=>{
+if(e.key!=='Escape')return;
+const m=document.getElementById('modal-bg');
+if(m&&m.classList.contains('show')){e.preventDefault();hideModal()}
+})}
 if(badSave)setTimeout(()=>toast('Saved career could not be loaded (damaged or outdated). Starting fresh.','error'),0)
 }
 function showBootFailure(err){
